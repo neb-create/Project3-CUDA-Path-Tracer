@@ -30,9 +30,15 @@
 
 > Multi Level BVH, creates trees for each mesh / geometry, then combines them at the very end into one top level BVH
 
-== Next Top Priority ==
+==============================
 
-> check transmissive material
+> Physically based DOF camera effect
+
+==============================
+
+
+
+== Next Top Priority ==
 
 > Environment Map
 

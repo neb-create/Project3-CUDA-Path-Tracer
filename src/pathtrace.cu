@@ -57,14 +57,13 @@ thrust::default_random_engine makeSeededRandomEngine(int iter, int index, int de
 
 __device__ glm::vec3 toneMap(glm::vec3 color)
 {
-
-    // DISABLED at the moment for testing.
-
-    // Reinhard tone mapping
-    //color = color / (color + glm::vec3(1.0f));
-
-    // Gamma correction
-    //color = glm::pow(color, glm::vec3(1.0f / 2.2f));
+  
+//    color *= 1.5f;
+//    // Reinhard tone mapping
+      //color = color / (color + glm::vec3(1.0f));
+//
+//    // Gamma correction
+      //color = glm::pow(color, glm::vec3(1.0f / 1.4f));
 
     return color;
 }
@@ -165,7 +164,31 @@ void pathtraceFree()
     checkCUDAError("pathtraceFree");
 }
 
+__device__ __host__ glm::vec2 SampleUniformDiskConcentric(glm::vec2 u)
+{
+    glm::vec2 uOffset = 2.0f * u - glm::vec2(1.0f);
 
+    if (uOffset.x == 0.0f && uOffset.y == 0.0f)
+        return glm::vec2(0.0f);
+
+    float theta;
+    float r;
+
+    if (fabs(uOffset.x) > fabs(uOffset.y))
+    {
+        r = uOffset.x;
+        theta = (PI / 4.0f) * (uOffset.y / uOffset.x);
+    }
+    else
+    {
+        r = uOffset.y;
+        theta =
+            (PI / 2.0f) -
+            (PI / 4.0f) * (uOffset.x / uOffset.y);
+    }
+
+    return r * glm::vec2(cosf(theta), sinf(theta));
+}
 
 /**
 * Generate PathSegments with rays from the camera through the screen into the
@@ -197,6 +220,16 @@ __global__ void generateRayFromCamera(Camera cam, int iter, int traceDepth, Path
         thrust::uniform_real_distribution<float> u01(0, 1);
         segment.ray.direction.x += (u01(rng) - 0.5f) * cam.pixelLength.x;
         segment.ray.direction.y += (u01(rng) - 0.5f) * cam.pixelLength.y;
+
+        // calculate DOF ray
+		// 1 - intersection point on focal plane
+		float focalDistance = cam.focalDistance;
+		float t = focalDistance / glm::dot(segment.ray.direction, cam.view);
+		glm::vec3 focalPoint = segment.ray.origin + segment.ray.direction * t;
+		// 2 - jitter ray origin on lens
+		glm::vec2 offset = SampleUniformDiskConcentric(glm::vec2(u01(rng), u01(rng))) * cam.lensRadius;
+		segment.ray.origin += cam.right * offset.x + cam.up * offset.y;
+		segment.ray.direction = glm::normalize(focalPoint - segment.ray.origin);
 
         segment.pixelIndex = index;
         segment.remainingBounces = traceDepth;
@@ -360,7 +393,7 @@ __global__ void shadeMaterial(
             case EMISSIVE:
 
                 pathSegment.color *= materialColor * material.emittance;
-                pathSegment.remainingBounces = 0;
+                pathSegment.remainingBounces = -1;
                 break;
 
             case DIFFUSE:
@@ -426,13 +459,37 @@ __global__ void shadeMaterial(
             case DIELECTRIC:
 
                 {
-                    float F = fresnelDielectric(glm::dot(-wo, nor), 1.0f, material.indexOfRefraction);
+                    float cosTheta = glm::dot(-ray.direction, nor);
+
+                    float etaI = 1.0f;
+                    float etaT = material.indexOfRefraction;
+
+					bool refract = false;
+
+                    if (cosTheta < 0.0f)
+                    {
+                        // Exiting the material
+                        cosTheta = -cosTheta;
+						float temp = etaI;
+						etaI = etaT;
+						etaT = temp;
+                        nor = -nor;
+
+                        refract = true;
+                    }
+
+                    float F = fresnelDielectric(cosTheta, etaI, etaT);
+
+
+                    float eta = etaI / etaT;
+                    // Check for total internal reflection
+                    float sinThetaT2 = eta * eta * (1.0f - cosTheta * cosTheta);
 
                     // Randomly pick between reflection and refraction based on Fresnel term
                     float randomTerm = u01(rng);
                     float randomThreshold = F;
 
-                    if (randomTerm < randomThreshold) { // Reflect
+					if (randomTerm < F && !refract) { // Reflect
 
                         // Reflect Ray
                         ray.direction = glm::reflect(ray.direction, nor);
@@ -440,15 +497,11 @@ __global__ void shadeMaterial(
                         pathSegment.remainingBounces--;
 
                         // Shade
-                        pathSegment.color *= materialColor * F * (1.0f / randomThreshold);
+                        pathSegment.color *= materialColor;
 
 
                     }
 					else { // Refract
-
-                        float eta = material.indexOfRefraction;
-                        if (glm::dot(-wo, nor) > 0.0f) eta = 1.0f / eta; // entering
-                        else nor = -nor; // exiting
 
                         // make ray pass through the surface
                         refractRay(ray.direction, nor, eta);
@@ -456,7 +509,7 @@ __global__ void shadeMaterial(
                         pathSegment.remainingBounces--;
 
                         // Shade
-						pathSegment.color *= materialColor * (1.0f - F) * (1.0f / (1.0f - randomThreshold));
+                        pathSegment.color *= materialColor;
 
                     }
 
@@ -472,8 +525,13 @@ __global__ void shadeMaterial(
         else {
             // If no intersection: Environment (Currently: Black) TODO: Env. Map
             pathSegment.color *= BACKGROUND_COLOR;
-            pathSegment.remainingBounces = 0;
+            pathSegment.remainingBounces = -1;
         }
+
+        if (pathSegment.remainingBounces == 0) {
+			pathSegment.color = glm::vec3(0.0f);
+			pathSegment.remainingBounces = -1;
+		}
     }
 }
 
@@ -546,9 +604,6 @@ void pathtrace(uchar4* pbo, int frame, int iter)
     int depth = 0;
 	int maxDepth = hst_scene->state.traceDepth;
 
-    // temp overwrite
-    maxDepth = 5;
-
     PathSegment* dev_path_end = dev_paths + pixelcount;
     int num_paths = dev_path_end - dev_paths;
 
@@ -618,8 +673,9 @@ void pathtrace(uchar4* pbo, int frame, int iter)
             dev_materials
         );
 
-
-        if (depth > maxDepth) iterationComplete = true;
+        if (depth > maxDepth) {
+            iterationComplete = true;
+        }
 
         if (guiData != NULL)
         {

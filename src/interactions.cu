@@ -44,20 +44,25 @@ __host__ __device__ glm::vec3 calculateRandomDirectionInHemisphere(
         + sin(around) * over * perpendicularDirection2;
 }
 
-__host__ __device__ bool refractRay(
-    glm::vec3& wi,
-    glm::vec3 n, 
-    float eta)
+__host__ __device__
+bool refractRay(glm::vec3& rayDir, glm::vec3 n, float eta)
 {
-    float cosThetaI = glm::dot(n, wi);
-    float sin2ThetaI = fmaxf(0.0f, 1.0f - cosThetaI * cosThetaI);
+    float cosThetaI = glm::dot(-rayDir, n);
+
+    float sin2ThetaI =
+        fmaxf(0.0f, 1.0f - cosThetaI * cosThetaI);
+
     float sin2ThetaT = eta * eta * sin2ThetaI;
 
     if (sin2ThetaT >= 1.0f)
         return false;
 
-    float cosThetaT = sqrtf(1.0f - sin2ThetaT);
-    wi = eta * -wi + (eta * cosThetaI - cosThetaT) * n;
+    float cosThetaT =
+        sqrtf(1.0f - sin2ThetaT);
+
+    rayDir =
+        eta * rayDir +
+        (eta * cosThetaI - cosThetaT) * n;
 
     return true;
 }
@@ -79,35 +84,14 @@ __host__ __device__ void scatterRay(
 
 __host__ __device__
 float fresnelDielectric(
-    float cosThetaI, 
-    float etaI, 
+    float cosThetaI,
+    float etaI,
     float etaT)
 {
-    cosThetaI = glm::clamp(cosThetaI, -1.0f, 1.0f);
+    cosThetaI = glm::clamp(cosThetaI, 0.0f, 1.0f);
 
-    bool entering = cosThetaI > 0.0f;
+    float r0 = (etaI - etaT) / (etaI + etaT);
+    r0 *= r0;
 
-    if (!entering)
-    {
-        float temp = etaI;
-        etaI = etaT;
-        etaT = temp;
-        cosThetaI = fabsf(cosThetaI);
-    }
-
-    float sinThetaI = sqrtf(fmaxf(0.0f, 1.0f - cosThetaI * cosThetaI));
-    float sinThetaT = (etaI / etaT) * sinThetaI;
-
-    if (sinThetaT >= 1.0f)
-        return 1.0f;
-
-    float cosThetaT = sqrtf(fmaxf(0.0f, 1.0f - sinThetaT * sinThetaT));
-
-    float Rs = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
-        ((etaT * cosThetaI) + (etaI * cosThetaT));
-
-    float Rp = ((etaI * cosThetaI) - (etaT * cosThetaT)) /
-        ((etaI * cosThetaI) + (etaT * cosThetaT));
-
-    return (Rs * Rs + Rp * Rp) * 0.5f;
+    return r0 + (1.0f - r0) * powf(1.0f - cosThetaI, 5.0f);
 }

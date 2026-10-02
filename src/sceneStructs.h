@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#define BACKGROUND_COLOR (glm::vec3(0.0f, 0.0f, 0.4f))
+#define BACKGROUND_COLOR (glm::vec3(0.0f, 0.0f, 0.0f))
 
 #define USE_BVH 1
 #define BVH_DEPTH 16
@@ -111,6 +111,9 @@ struct Camera
     glm::vec3 right;
     glm::vec2 fov;
     glm::vec2 pixelLength;
+
+	float lensRadius;
+	float focalDistance;
 };
 
 struct RenderState

@@ -5,7 +5,7 @@
         {
             "TYPE":"Emitting",
             "RGB":[1.0, 1.0, 1.0],
-            "EMITTANCE":10.0
+            "EMITTANCE":5.0
         },
         "diffuse_white":
         {
@@ -52,19 +52,12 @@
             "ROUGHNESS":0.0,
             "IOR": 1.55
         },
-        "transmissive_red":
-        {
-            "TYPE":"Transmissive",
-            "RGB":[0.98, 0.48, 0.48],
-            "ROUGHNESS":0.0,
-            "IOR": 1.55
-        },
         "dielectric_white":
         {
             "TYPE":"Dielectric",
             "RGB":[0.98, 0.98, 0.98],
             "ROUGHNESS":0.0,
-            "IOR": 1.4
+            "IOR": 1.55
         }
     },
     "Camera":
@@ -76,10 +69,18 @@
         "FILE":"cornell",
         "EYE":[0.0,5.0,10.5],
         "LOOKAT":[0.0,5.0,0.0],
-        "UP":[0.0,1.0,0.0],
-        "FOCALDISTANCE": 13.0,
-        "LENSRADIUS": 0.0
+        "UP":[0.0,1.0,0.0]
     },
+    "Models": [
+        {
+            "TYPE": "gltf",
+            "FILE": "miku",
+            "MATERIAL": "diffuse_blue",
+            "TRANS":[-0.8,2.2,0.0],
+            "ROTAT":[270.0,30.0,-15.0],
+            "SCALE":[9.0,9.0,9.0]
+        }
+    ],
     "Primitives":
     [
         {
@@ -123,27 +124,6 @@
             "TRANS":[5.0,5.0,0.0],
             "ROTAT":[0.0,0.0,0.0],
             "SCALE":[0.01,10.0,10.0]
-        },
-        {
-            "TYPE":"sphere",
-            "MATERIAL":"transmissive_white",
-            "TRANS":[0.5,23.5,4.0],
-            "ROTAT":[0.0,0.0,0.0],
-            "SCALE":[3.0,3.0,3.0]
-        },
-        {
-            "TYPE":"sphere",
-            "MATERIAL":"specular_white",
-            "TRANS":[-2.5,3.5,1.0],
-            "ROTAT":[0.0,0.0,0.0],
-            "SCALE":[3.0,3.0,3.0]
-        },
-        {
-            "TYPE":"sphere",
-            "MATERIAL":"transmissive_white",
-            "TRANS":[2.5,3.5,1.0],
-            "ROTAT":[0.0,0.0,0.0],
-            "SCALE":[3.0,3.0,3.0]
         }
     ]
 }
