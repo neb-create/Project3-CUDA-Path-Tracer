@@ -83,8 +83,6 @@ The most important performance optimization is the BVH acceleration structure, w
 | 6000 | 0.16 | 10.62 | ~66x |
 | 9000 | 0.10 | 8.81 | ~88x |
 
-<img src="img/bvh_performance.png" width="350">
-
 **Further optimization**
 
 The basic traversal algorithm is by nature branchy and memory-incoherent. I suspect that this affects our runtime on GPU a lot and there are possible improvements that I could still make using methods like near-child-first ordering or better tree encoding methods.
