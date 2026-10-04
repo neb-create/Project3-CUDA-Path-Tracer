@@ -90,12 +90,19 @@ The basic traversal algorithm is by nature branchy and memory-incoherent. I susp
 ## Credits and References
 
 GLTF scene loading library:
+
 [tinygltf](https://github.com/syoyo/tinygltf)
+
 3D model used in showcase:
+
 [Hatsune Miku Plushie by revworks](https://skfb.ly/pxRGB)
+
 Code referenced:
+
 [PBRTv4 5.2.3](https://pbr-book.org/4ed/Cameras_and_Film/Projective_Camera_Models#TheThinLensModelandDepthofField)
+
 [PBRTv4 9.2](https://pbr-book.org/4ed/Reflection_Models/Diffuse_Reflection)
+
 [PBRTv4 9.3](https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission)
 
 ## Note for graders
