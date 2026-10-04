@@ -37,7 +37,7 @@ We achieve Anti-Aliasing by randomly jittering our ray direction within the pixe
 
 | Before (no AA), zoomed crop | After (AA), zoomed crop |
 |:--:|:--:|
-| ![](img/aa0.png) | ![](img/aa1.png) |
+| <img src="img/aa0.png" width="300"> | <img src="img/aa1.png" width="300"> |
 
 **Performance impact**
 
