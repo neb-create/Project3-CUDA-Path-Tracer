@@ -57,7 +57,7 @@ Instead of a pin-hole camera model, this renderer supports a physically based ca
 By sampling the lens position on a 2d disk using concentric mapping and recomputing ray direction through the focus point, we are able to render images with a depth of field effect, producing sharp imagery only at specific distances based on the focal length.
 
 | Pinhole (no DOF) | Lens radius = 1.0, focal distance = 8.25 | Lens radius = 1.0, focal distance = 9.5 | Lens radius = 1.0, focal distance = 11.5 |
-|---|---|---|
+|:--:|:--:|:--:|:--:|
 | ![](img/render2.png) | ![](img/render3.png) | ![](img/render4.png) | ![](img/render5.png) |
 
 **Performance impact**
@@ -83,7 +83,7 @@ The most important performance optimization is the BVH acceleration structure, w
 | 6000 | 0.16 | 10.62 | ~66x |
 | 9000 | 0.10 | 8.81 | ~88x |
 
-![](img/bvh_performance.png)
+<img src="img/bvh_performance.png" width="350">
 
 **Further optimization**
 
