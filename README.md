@@ -25,7 +25,7 @@ For performance improvements, the renderer can build a BVH acceleration structur
 
 ### Diffuse, Reflective and Refractive Materials
 
-![](img/render1.png) 
+<img src="img/render1.png" width="540">
 
 Diffuse Material: Scatters rays with cosine-weighted hemisphere sampling. the BSDF and PDF terms cancel and the path color is simply multiplied by the surface albedo.
 Reflective Material: Perfect mirror reflection of the incoming ray about the surface normal, tinted by the material's specular color.
